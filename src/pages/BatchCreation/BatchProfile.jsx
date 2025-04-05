@@ -80,6 +80,8 @@ const BatchProfile = () => {
   const storeLocation = async (locationData) => {
     try {
       const response = await axios.post(`${API_URL}/access-logs`, {
+        batch_number: batchData.batch_number,
+        product_name: batchData.product_name,
         latitude: locationData.latitude,
         longitude: locationData.longitude,
         address: locationData.locationName, // Matches the 'address' field in the API
