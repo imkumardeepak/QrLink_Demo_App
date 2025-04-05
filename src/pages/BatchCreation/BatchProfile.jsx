@@ -114,8 +114,11 @@ const BatchProfile = () => {
     };
 
     fetchBatchData();
-    getGeoLocation();
   }, [identification_number]);
+
+  useEffect(() => {
+    getGeoLocation();
+  }, [batchData]);
 
   // Lock body scroll when zoom is active
   useEffect(() => {
