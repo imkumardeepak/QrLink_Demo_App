@@ -125,14 +125,17 @@ const AccessLogsPage = () => {
                         {log.address}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {new Date(log.accessed_at).toLocaleString("en-IN", {
+                        {new Date(
+                          new Date(log.accessed_at).getTime() -
+                            5.5 * 60 * 60 * 1000
+                        ).toLocaleString("en-IN", {
                           year: "numeric",
                           month: "short",
                           day: "2-digit",
                           hour: "2-digit",
                           minute: "2-digit",
                           second: "2-digit",
-                          hour12: true,
+                          hour12: false,
                         })}
                       </td>
                     </tr>
