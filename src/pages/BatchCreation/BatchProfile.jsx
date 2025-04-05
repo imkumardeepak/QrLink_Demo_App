@@ -97,7 +97,6 @@ const BatchProfile = () => {
 
   useEffect(() => {
     // Request location permission on component mount
-    getGeoLocation();
 
     const fetchBatchData = async () => {
       try {
@@ -115,6 +114,7 @@ const BatchProfile = () => {
     };
 
     fetchBatchData();
+    getGeoLocation();
   }, [identification_number]);
 
   // Lock body scroll when zoom is active
