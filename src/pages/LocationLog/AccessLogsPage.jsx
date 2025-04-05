@@ -14,6 +14,7 @@ const AccessLogsPage = () => {
     setLoading(true);
     try {
       const response = await axios.get(`${API_URL}/access-logs`);
+      console.log(response.data);
       setAccessLogs(response.data.data); // Assuming the API returns { success, message, data }
       setLoading(false);
     } catch (err) {
@@ -73,6 +74,12 @@ const AccessLogsPage = () => {
                     ID
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Batch ID
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Product Name
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Latitude
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -101,6 +108,12 @@ const AccessLogsPage = () => {
                     <tr key={log.id}>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {log.id}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {log.batch_number}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {log.product_name}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {log.latitude}
