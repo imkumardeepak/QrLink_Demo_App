@@ -12,8 +12,91 @@ const BatchProfile = () => {
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState("");
   const [zoomedImage, setZoomedImage] = useState(null);
+  const [userLocation, setUserLocation] = useState(null);
+
+  // Function to get location from geolocation API and reverse geocode to get location name
+  const getGeoLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          try {
+            // Reverse geocode to get location name
+            const locationName = await reverseGeocode(latitude, longitude);
+            const locationData = {
+              latitude,
+              longitude,
+              locationName,
+              source: "geolocation",
+            };
+            setUserLocation(locationData);
+            storeLocation(locationData);
+          } catch (err) {
+            console.error("Reverse geocoding error:", err);
+            // Fallback to just lat/long if geocoding fails
+            const locationData = {
+              latitude,
+              longitude,
+              locationName: "Unknown",
+              source: "geolocation",
+            };
+            setUserLocation(locationData);
+            storeLocation(locationData);
+          }
+        },
+        (err) => {
+          console.error("Geolocation error:", err);
+        },
+        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+      );
+    } else {
+      console.error("Geolocation not supported");
+    }
+  };
+
+  // Function to reverse geocode latitude and longitude to location name
+  const reverseGeocode = async (latitude, longitude) => {
+    try {
+      const response = await axios.get(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10`
+      );
+      const { address } = response.data;
+      // Construct a readable location name from address components
+      const locationName = [
+        address.city || address.town || address.village,
+        address.state || address.region,
+        address.country,
+      ]
+        .filter(Boolean) // Remove undefined/null values
+        .join(", ");
+      return locationName || "Unknown Location";
+    } catch (err) {
+      console.error("Error fetching location name:", err);
+      throw err; // Let the caller handle the error
+    }
+  };
+
+  // Function to store location data (e.g., send to your backend)
+  const storeLocation = async (locationData) => {
+    try {
+      const response = await axios.post(`${API_URL}/access-logs`, {
+        latitude: locationData.latitude,
+        longitude: locationData.longitude,
+        address: locationData.locationName, // Matches the 'address' field in the API
+      });
+      console.log("Location stored successfully:", response.data);
+    } catch (err) {
+      console.error(
+        "Error storing location:",
+        err.response?.data || err.message
+      );
+    }
+  };
 
   useEffect(() => {
+    // Request location permission on component mount
+    getGeoLocation();
+
     const fetchBatchData = async () => {
       try {
         const response = await axios.get(
@@ -39,7 +122,6 @@ const BatchProfile = () => {
     } else {
       document.body.style.overflow = "auto";
     }
-
     return () => {
       document.body.style.overflow = "auto";
     };
@@ -138,14 +220,12 @@ const BatchProfile = () => {
       setIsZoomed(false);
     };
 
-    // Lock body scroll when zoom is active
     useEffect(() => {
       if (isZoomed) {
         document.body.style.overflow = "hidden";
       } else {
         document.body.style.overflow = "auto";
       }
-
       return () => {
         document.body.style.overflow = "auto";
       };
@@ -153,7 +233,6 @@ const BatchProfile = () => {
 
     return (
       <>
-        {/* Image container */}
         <div
           className="border rounded-lg p-2 sm:p-3 md:p-4 h-full flex items-center justify-center cursor-pointer relative group transition-all"
           onClick={handleImageClick}
@@ -164,9 +243,9 @@ const BatchProfile = () => {
                 <img
                   src={convertBufferToBase64(imageData)}
                   alt={altText}
-                  className={`w-full object-contain mx-auto 
-                  sm:max-h-48 md:max-h-56 lg:max-h-64 
-                  ${className || ""}`}
+                  className={`w-full object-contain mx-auto sm:max-h-48 md:max-h-56 lg:max-h-64 ${
+                    className || ""
+                  }`}
                 />
                 <div className="absolute top-2 right-2 bg-white bg-opacity-75 rounded-full p-1 sm:p-2 opacity-0 group-hover:opacity-100 transition-opacity">
                   <FaSearchPlus className="text-gray-700 text-sm sm:text-base" />
@@ -186,7 +265,6 @@ const BatchProfile = () => {
           )}
         </div>
 
-        {/* Zoom modal */}
         {isZoomed && (
           <div
             className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-2 sm:p-4"
@@ -223,20 +301,15 @@ const BatchProfile = () => {
           "url('https://images.pexels.com/photos/12612073/pexels-photo-12612073.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1')",
       }}
     >
-      {/* Zoomed Image Modal */}
       <ZoomedImageModal />
-
       <div className="container mx-auto px-4">
         <div className="bg-white shadow-md rounded-lg overflow-hidden mb-6">
-          {/* Header */}
           <div className="bg-gray-100 text-gray-800 p-4">
             <h2 className="text-2xl font-bold">Product Information</h2>
           </div>
 
           <div className="p-6">
-            {/* Product Image and Basic Info */}
             <div className="flex flex-col md:flex-row mb-6">
-              {/* Product Image */}
               <div className="w-full md:w-1/3 mb-4 md:mb-0 md:pr-6">
                 {batchData.product_image && (
                   <ZoomableImage
@@ -246,10 +319,8 @@ const BatchProfile = () => {
                 )}
               </div>
 
-              {/* Basic Info */}
               <div className="w-full md:w-2/3">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  {/* Product Name */}
                   <div className="border rounded-lg p-4">
                     <div className="font-semibold text-gray-600 mb-1">
                       Product Name
@@ -258,8 +329,6 @@ const BatchProfile = () => {
                       {batchData.product_name || "TATAMIDA 17.8 SL - 100 ML"}
                     </div>
                   </div>
-
-                  {/* Registration Number */}
                   <div className="border rounded-lg p-4">
                     <div className="font-semibold text-gray-600 mb-1">
                       Registration Number
@@ -269,8 +338,6 @@ const BatchProfile = () => {
                         "CIR36,589/2001IMIDACLOPRID (SL)21"}
                     </div>
                   </div>
-
-                  {/* Batch Number */}
                   <div className="border rounded-lg p-4">
                     <div className="font-semibold text-gray-600 mb-1">
                       Batch Number
@@ -279,8 +346,6 @@ const BatchProfile = () => {
                       {batchData.batch_number || "AK00258"}
                     </div>
                   </div>
-
-                  {/* Manufactured By */}
                   <div className="border rounded-lg p-4">
                     <div className="font-semibold text-gray-600 mb-1">
                       Manufactured By
@@ -289,8 +354,6 @@ const BatchProfile = () => {
                       {batchData.manufactured_by || "Rallis India Ltd"}
                     </div>
                   </div>
-
-                  {/* Manufacturing Date */}
                   <div className="border rounded-lg p-4">
                     <div className="font-semibold text-gray-600 mb-1">
                       Manufacturing Date
@@ -307,8 +370,6 @@ const BatchProfile = () => {
                         : "27-May-2022"}
                     </div>
                   </div>
-
-                  {/* Expiry Date */}
                   <div className="border rounded-lg p-4">
                     <div className="font-semibold text-gray-600 mb-1">
                       Expiry Date
@@ -330,9 +391,7 @@ const BatchProfile = () => {
               </div>
             </div>
 
-            {/* Cautionary Symbol and Additional Info */}
             <div className="flex flex-col md:flex-row mb-6">
-              {/* Cautionary Symbol */}
               <div className="w-full md:w-1/3 mb-4 md:mb-0 md:pr-6">
                 <div className="border rounded-lg p-4">
                   <div className="font-semibold text-gray-600 mb-2">
@@ -352,7 +411,6 @@ const BatchProfile = () => {
                 </div>
               </div>
 
-              {/* Antidote Statement */}
               <div className="w-full md:w-1/3 mb-4 md:mb-0 md:px-3">
                 <div className="border rounded-lg p-4 h-full">
                   <div className="font-semibold text-gray-600 mb-2">
@@ -365,7 +423,6 @@ const BatchProfile = () => {
                 </div>
               </div>
 
-              {/* Marketed By */}
               <div className="w-full md:w-1/3 md:pl-6">
                 <div className="border rounded-lg p-4 h-full">
                   <div className="font-semibold text-gray-600 mb-2">
@@ -376,9 +433,7 @@ const BatchProfile = () => {
               </div>
             </div>
 
-            {/* Identification Number and Customer Care */}
             <div className="flex flex-col md:flex-row">
-              {/* Identification Number */}
               <div className="w-full md:w-1/2 mb-4 md:mb-0 md:pr-3">
                 <div className="border rounded-lg p-4">
                   <div className="font-semibold text-gray-600 mb-2">
@@ -388,7 +443,6 @@ const BatchProfile = () => {
                 </div>
               </div>
 
-              {/* Customer Care Details */}
               <div className="w-full md:w-1/2 md:pl-3">
                 <div className="border rounded-lg p-4">
                   <div className="font-semibold text-gray-600 mb-2">
@@ -402,7 +456,6 @@ const BatchProfile = () => {
               </div>
             </div>
 
-            {/* Product Instructions Image */}
             {batchData.product_instruction_image && (
               <div className="mt-6">
                 <h3 className="text-xl font-bold mb-4 border-b pb-2">
@@ -415,6 +468,27 @@ const BatchProfile = () => {
                   } Instructions`}
                   className="max-h-96"
                 />
+              </div>
+            )}
+
+            {/* Display Location Info (Optional) */}
+            {userLocation && (
+              <div className="mt-6 border rounded-lg p-4">
+                <div className="font-semibold text-gray-600 mb-2">
+                  Access Location
+                </div>
+                <div>
+                  {userLocation.error ? (
+                    userLocation.error
+                  ) : (
+                    <>
+                      Latitude: {userLocation.latitude}, Longitude:{" "}
+                      {userLocation.longitude}
+                      {userLocation.ip && `, IP: ${userLocation.ip}`}
+                      {" (Source: " + userLocation.source + ")"}
+                    </>
+                  )}
+                </div>
               </div>
             )}
           </div>
