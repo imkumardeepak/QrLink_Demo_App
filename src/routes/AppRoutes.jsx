@@ -29,12 +29,13 @@ const AppRoutes = () => {
             element={<BatchProductionPage />}
           />
           <Route path="batches/:id" element={<BatchDetail />} />
-          <Route
-            path="batchesprofile/:identification_number"
-            element={<BatchProfile />}
-          />
+
           <Route path="*" element={<NotFound />} />
         </Route>
+        <Route
+          path="batchesprofile/:identification_number"
+          element={<BatchProfile />}
+        />
       </Routes>
     </Suspense>
   );
