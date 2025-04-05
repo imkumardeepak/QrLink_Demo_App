@@ -115,6 +115,21 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             Batches
           </ListItemButton>
         </ListItem>
+        <ListItem>
+          <ListItemButton
+            component={Link}
+            to="/access-logs"
+            sx={{
+              color: "white",
+              py: 1.5,
+              "&:hover": { bgcolor: "rgba(255, 255, 255, 0.1)" },
+              "&.active": { bgcolor: "rgba(255, 255, 255, 0.2)" },
+            }}
+          >
+            <FiBox style={{ marginRight: "12px", fontSize: "20px" }} />
+            Access Logs
+          </ListItemButton>
+        </ListItem>
       </List>
     </Box>
   );

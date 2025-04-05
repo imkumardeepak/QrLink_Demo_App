@@ -9,6 +9,9 @@ const ProductPage = lazy(() => import("../pages/ProductMaster/ProductMaster"));
 const BatchPage = lazy(() => import("../pages/BatchCreation/Batchmaster"));
 const BatchProfile = lazy(() => import("../pages/BatchCreation/BatchProfile"));
 const BatchDetail = lazy(() => import("../pages/BatchCreation/BatchDetail"));
+const AccessLogsPage = lazy(() =>
+  import("../pages/LocationLog/AccessLogsPage")
+);
 const BatchProductionPage = lazy(() =>
   import("../pages/BatchCreation/BatchProductionPage")
 );
@@ -29,7 +32,7 @@ const AppRoutes = () => {
             element={<BatchProductionPage />}
           />
           <Route path="batches/:id" element={<BatchDetail />} />
-
+          <Route path="access-logs" element={<AccessLogsPage />} />
           <Route path="*" element={<NotFound />} />
         </Route>
         <Route
